@@ -23,7 +23,7 @@ public class PlayerDatabaseService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Getter
-    private static final Map<String, Integer> playerIDs = new HashMap<String, Integer>();
+    private final Map<String, Integer> playerIDs = new HashMap<String, Integer>();
 
     @Autowired
     private RestTemplate restTemplate;

@@ -16,6 +16,6 @@ public class FantasyFootballApiApplication {
     // allows for command line testing
     @Bean
     CommandLineRunner run(PlayerDatabaseService playerService) {
-        return args -> playerService.updatePlayerDatabase;
+        return args -> playerService.updatePlayerDatabase();
     }
 }

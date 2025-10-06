@@ -29,7 +29,7 @@ public class ScrimmageStats {
     private int longestRush;
     private double rushSuccessRate;
     private int rushTouchDowns;
-    private int rushFirstDOwns;
+    private int rushFirstDowns;
     private double rushAttemptsPerGame;
     private int fumbles;
     private int targets;
