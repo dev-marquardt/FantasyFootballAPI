@@ -14,7 +14,7 @@ import lombok.Setter;
 @Table(name = "passingstats")
 public class PassingStats {
     @Id
-    private int playerID;
+    private int playerId;
     private String playerName;
     private int age;
     private String team;

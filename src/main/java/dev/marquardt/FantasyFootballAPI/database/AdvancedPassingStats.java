@@ -13,7 +13,7 @@ import lombok.Setter;
 @Table(name = "advancedpassingstats")
 public class AdvancedPassingStats {
     @Id
-    private int playerID;
+    private int playerId;
     private String playerName;
     private int age;
     private String team;

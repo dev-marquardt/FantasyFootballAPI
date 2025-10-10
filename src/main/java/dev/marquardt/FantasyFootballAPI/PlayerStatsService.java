@@ -1,7 +1,6 @@
 package dev.marquardt.FantasyFootballAPI;
 
 //import databases
-import com.google.common.annotations.Beta;
 import dev.marquardt.FantasyFootballAPI.database.*;
 
 // imports for logger and  Getter
@@ -21,9 +20,7 @@ import org.springframework.stereotype.Service;
 //rate limiter import
 import com.google.common.util.concurrent.RateLimiter;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class PlayerStatsService {
@@ -86,11 +83,54 @@ public class PlayerStatsService {
         nameKey.put("2025_Red_Zone_Receiving_Stats","player");
     }
 
+    public ArrayList<Object> getStatsById(int ID){
+
+        ArrayList<Object> output = new ArrayList<Object>();
+
+        output.add(passingStatsRepository.findById(ID));
+        output.add(scrimmageStatsRepository.findById(ID));
+        output.add(defenseStatsRepository.findById(ID));
+        output.add(advancedPassingStatsRepository.findById(ID));
+        output.add(advancedRushingStatsRepository.findById(ID));
+        output.add(advancedReceivingStatsRepository.findById(ID));
+        output.add(advancedDefenseStatsRepository.findById(ID));
+        output.add(fantasyRankingsRepository.findById(ID));
+        output.add(redZonePassingStatsRepository.findById(ID));
+        output.add(redZoneRushingStatsRepository.findById(ID));
+        output.add(redZoneReceivingStatsRepository.findById(ID));
+
+        return output;
+    }
+
+    public ArrayList<Object> getStatsByName(String name){
+
+        ArrayList<Object> output = new ArrayList<>();
+
+        int ID = playerDatabaseService.getPlayerIDs().get(name);
+
+        output.add(passingStatsRepository.findById(ID));
+        output.add(scrimmageStatsRepository.findById(ID));
+        output.add(defenseStatsRepository.findById(ID));
+        output.add(advancedPassingStatsRepository.findById(ID));
+        output.add(advancedRushingStatsRepository.findById(ID));
+        output.add(advancedReceivingStatsRepository.findById(ID));
+        output.add(advancedDefenseStatsRepository.findById(ID));
+        output.add(fantasyRankingsRepository.findById(ID));
+        output.add(redZonePassingStatsRepository.findById(ID));
+        output.add(redZoneRushingStatsRepository.findById(ID));
+        output.add(redZoneReceivingStatsRepository.findById(ID));
+
+        return output;
+    }
+
     private void updatePlayerStats(){
         logger.info("Updating player stats");
 
         // set up rate limiter
         RateLimiter rl = RateLimiter.create((20.0/60.0));
+
+        rl.acquire();
+        playerDatabaseService.updatePlayerDatabase();
 
         for(String url : Settings.allPFRSeasonStatsURL){
             try {
@@ -103,16 +143,23 @@ public class PlayerStatsService {
 
                 // grab title
                 String title = doc.title().split("\\|")[0].trim().replaceAll("\\s+", "_");
+                if (title == null ||  title.isEmpty()) {
+                    logger.error("Title is null or empty");
+                    throw new RuntimeException("Title is null or empty");
+                }
+
 
                 // load in table
                 Element table = doc.selectFirst("table");
                 if (table == null) {
+                    logger.error("Table is null or empty");
                     throw new RuntimeException("Table not found URL: " + url);
                 }
 
                 // grab headers
                 Elements header = table.select("thead tr:last-child th");
                 if (header.isEmpty()) {
+                    logger.error("Header is null or empty");
                     throw new RuntimeException("Headers not found in table, URL: " + url);
                 }
 
@@ -156,14 +203,13 @@ public class PlayerStatsService {
 
                     if(dataMap.get(nameKey.get(title)).toString() == null){
                         logger.error("No name in scraped row");
-
                         continue;
                     }
 
                     if(title.equals("2025_NFL_Passing")){
                         PassingStats passingStats = new PassingStats();
 
-                        passingStats.setPlayerID(playerDatabaseService.getPlayerIDs().get(dataMap.get(nameKey.get(title)).toString().replaceAll("[^\\p{L}]", "").toLowerCase()));
+                        passingStats.setPlayerId(playerDatabaseService.getPlayerIDs().get(dataMap.get(nameKey.get(title)).toString().replaceAll("[^\\p{L}]", "").toLowerCase()));
                         passingStats.setPlayerName(dataMap.get(nameKey.get(title)).toString());
                         passingStats.setAge(Integer.parseInt(dataMap.get("age").toString()));
                         passingStats.setTeam(dataMap.get("team_name_abbr").toString());
@@ -244,7 +290,7 @@ public class PlayerStatsService {
                     else if(title.equals("2025_NFL_Defense")){
                         DefenseStats defenseStats = new DefenseStats();
 
-                        defenseStats.setPlayerID(playerDatabaseService.getPlayerIDs().get(dataMap.get(nameKey.get(title)).toString().replaceAll("[^\\p{L}]", "").toLowerCase()));
+                        defenseStats.setPlayerId(playerDatabaseService.getPlayerIDs().get(dataMap.get(nameKey.get(title)).toString().replaceAll("[^\\p{L}]", "").toLowerCase()));
                         defenseStats.setPlayerName(dataMap.get(nameKey.get(title)).toString());
                         defenseStats.setAge(Integer.parseInt(dataMap.get("age").toString()));
                         defenseStats.setTeam(dataMap.get("team_name_abbr").toString());
@@ -276,7 +322,7 @@ public class PlayerStatsService {
                     else if(title.equals("2025_NFL_Advanced_Passing")){
                         AdvancedPassingStats advancedPassingStats = new AdvancedPassingStats();
 
-                        advancedPassingStats.setPlayerID(playerDatabaseService.getPlayerIDs().get(dataMap.get(nameKey.get(title)).toString().replaceAll("[^\\p{L}]", "").toLowerCase()));
+                        advancedPassingStats.setPlayerId(playerDatabaseService.getPlayerIDs().get(dataMap.get(nameKey.get(title)).toString().replaceAll("[^\\p{L}]", "").toLowerCase()));
                         advancedPassingStats.setPlayerName(dataMap.get(nameKey.get(title)).toString());
                         advancedPassingStats.setAge(Integer.parseInt(dataMap.get("age").toString()));
                         advancedPassingStats.setTeam(dataMap.get("team_name_abbr").toString());
@@ -349,7 +395,7 @@ public class PlayerStatsService {
                     else if(title.equals("2025_NFL_Advanced_Receiving")){
                         AdvancedReceivingStats advancedReceivingStats = new AdvancedReceivingStats();
 
-                        advancedReceivingStats.setPlayerID(playerDatabaseService.getPlayerIDs().get(dataMap.get(nameKey.get(title)).toString().replaceAll("[^\\p{L}]", "").toLowerCase()));
+                        advancedReceivingStats.setPlayerId(playerDatabaseService.getPlayerIDs().get(dataMap.get(nameKey.get(title)).toString().replaceAll("[^\\p{L}]", "").toLowerCase()));
                         advancedReceivingStats.setPlayerName(dataMap.get(nameKey.get(title)).toString());
                         advancedReceivingStats.setAge(Integer.parseInt(dataMap.get("age").toString()));
                         advancedReceivingStats.setTeam(dataMap.get("team_name_abbr").toString());
@@ -379,7 +425,7 @@ public class PlayerStatsService {
                     else if(title.equals("2025_NFL_Advanced_Defense")){
                         AdvancedDefenseStats advancedDefenseStats = new AdvancedDefenseStats();
 
-                        advancedDefenseStats.setPlayerID(playerDatabaseService.getPlayerIDs().get(dataMap.get(nameKey.get(title)).toString().replaceAll("[^\\p{L}]", "").toLowerCase()));
+                        advancedDefenseStats.setPlayerId(playerDatabaseService.getPlayerIDs().get(dataMap.get(nameKey.get(title)).toString().replaceAll("[^\\p{L}]", "").toLowerCase()));
                         advancedDefenseStats.setPlayerName(dataMap.get(nameKey.get(title)).toString());
                         advancedDefenseStats.setAge(Integer.parseInt(dataMap.get("age").toString()));
                         advancedDefenseStats.setTeam(dataMap.get("team_name_abbr").toString());
@@ -416,7 +462,7 @@ public class PlayerStatsService {
                     else if(title.equals("2025_NFL_Fantasy_Rankings")){
                         FantasyRankings fantasyRankings = new FantasyRankings();
 
-                        fantasyRankings.setPlayerID(playerDatabaseService.getPlayerIDs().get(dataMap.get(nameKey.get(title)).toString().replaceAll("[^\\p{L}]", "").toLowerCase()));
+                        fantasyRankings.setPlayerId(playerDatabaseService.getPlayerIDs().get(dataMap.get(nameKey.get(title)).toString().replaceAll("[^\\p{L}]", "").toLowerCase()));
                         fantasyRankings.setPlayerName(dataMap.get(nameKey.get(title)).toString());
                         fantasyRankings.setAge(Integer.parseInt(dataMap.get("age").toString()));
                         fantasyRankings.setTeam(dataMap.get("team_name_abbr").toString());
@@ -456,7 +502,7 @@ public class PlayerStatsService {
                     else if(title.equals("2025_Red_Zone_Passing_Stats")){
                         RedZonePassingStats redZonePassingStats = new RedZonePassingStats();
 
-                        redZonePassingStats.setPlayerID(playerDatabaseService.getPlayerIDs().get(dataMap.get(nameKey.get(title)).toString().replaceAll("[^\\p{L}]", "").toLowerCase()));
+                        redZonePassingStats.setPlayerId(playerDatabaseService.getPlayerIDs().get(dataMap.get(nameKey.get(title)).toString().replaceAll("[^\\p{L}]", "").toLowerCase()));
                         redZonePassingStats.setPlayerName(dataMap.get(nameKey.get(title)).toString());
                         redZonePassingStats.setTeam(dataMap.get("team_name_abbr").toString());
                         redZonePassingStats.setPassAttempts(Integer.parseInt(dataMap.get("pass_att").toString()));
@@ -477,7 +523,7 @@ public class PlayerStatsService {
                     else if(title.equals("2025_Red_Zone_Rushing_Stats")){
                         RedZoneRushingStats redZoneRushingStats = new RedZoneRushingStats();
 
-                        redZoneRushingStats.setPlayerID(playerDatabaseService.getPlayerIDs().get(dataMap.get(nameKey.get(title)).toString().replaceAll("[^\\p{L}]", "").toLowerCase()));
+                        redZoneRushingStats.setPlayerId(playerDatabaseService.getPlayerIDs().get(dataMap.get(nameKey.get(title)).toString().replaceAll("[^\\p{L}]", "").toLowerCase()));
                         redZoneRushingStats.setPlayerName(dataMap.get(nameKey.get(title)).toString());
                         redZoneRushingStats.setTeam(dataMap.get("team_name_abbr").toString());
                         redZoneRushingStats.setRushAttempts(Integer.parseInt(dataMap.get("rush_att").toString()));
@@ -498,7 +544,7 @@ public class PlayerStatsService {
                     else if(title.equals("2025_Red_Zone_Receiving_Stats")){
                         RedZoneReceivingStats redZoneReceivingStats = new RedZoneReceivingStats();
 
-                        redZoneReceivingStats.setPlayerID(playerDatabaseService.getPlayerIDs().get(dataMap.get(nameKey.get(title)).toString().replaceAll("[^\\p{L}]", "").toLowerCase()));
+                        redZoneReceivingStats.setPlayerId(playerDatabaseService.getPlayerIDs().get(dataMap.get(nameKey.get(title)).toString().replaceAll("[^\\p{L}]", "").toLowerCase()));
                         redZoneReceivingStats.setPlayerName(dataMap.get(nameKey.get(title)).toString());
                         redZoneReceivingStats.setTeam(dataMap.get("team_name_abbr").toString());
                         redZoneReceivingStats.setTargets(Integer.parseInt(dataMap.get("targets").toString()));
@@ -519,7 +565,6 @@ public class PlayerStatsService {
                     }
                     else{
                         logger.error("Invalid title: " + title);
-
                         throw new RuntimeException("Unknown title: " + title);
                     }
 

@@ -15,8 +15,7 @@ import org.springframework.web.client.RestTemplate;
 import org.json.JSONObject;
 
 // imports to maps
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class PlayerDatabaseService {
@@ -30,6 +29,27 @@ public class PlayerDatabaseService {
 
     @Autowired
     private PlayerRepository playerRepository;
+
+    public Optional<Player> getPlayerById(int ID){
+
+        return playerRepository.findById(ID);
+    }
+
+    public List<Player> getAllPlayers(){
+
+        return playerRepository.findAll();
+    }
+
+    public List<Player> getPlayersByPosition(String position){
+
+        return playerRepository.findByPositionIgnoreCase(position);
+    }
+
+    public Optional<Player> getPlayerByName(String name){
+
+        return playerRepository.findById(playerIDs.get(name));
+    }
+
 
     public void updatePlayerDatabase(){
         logger.info("Started API Player Updating");

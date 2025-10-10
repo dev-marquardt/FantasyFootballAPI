@@ -12,7 +12,7 @@ import lombok.Setter;
 @Table (name = "redzonerushingstats")
 public class RedZoneRushingStats {
     @Id
-    private int playerID;
+    private int playerId;
     private String playerName;
     private String team;
     private int rushAttempts;
