@@ -30,6 +30,9 @@ public class PlayerStatsService {
     // map to hold name display stuff
     private final Map<String, String> nameKey = new HashMap<String, String>();
 
+    // map to hold table stuff
+    private final Map<String, String> tableID = new HashMap<String, String>();
+
     @Autowired
     private PassingStatsRepository passingStatsRepository;
 
@@ -69,6 +72,7 @@ public class PlayerStatsService {
     @PostConstruct
     public void initNameKeyMappings() {
         nameKey.clear();
+        tableID.clear();
 
         nameKey.put("2025_NFL_Passing", "name_display");
         nameKey.put("2025_NFL_Scrimmage_Stats","name_display");
@@ -81,9 +85,23 @@ public class PlayerStatsService {
         nameKey.put("2025_Red_Zone_Passing_Stats","player");
         nameKey.put("2025_Red_Zone_Rushing_Stats","player");
         nameKey.put("2025_Red_Zone_Receiving_Stats","player");
+
+        tableID.put("2025_NFL_Passing", "#passing");
+        tableID.put("2025_NFL_Scrimmage_Stats", "#scrimmage");
+        tableID.put("2025_NFL_Defense", "#defense");
+        tableID.put("2025_NFL_Advanced_Passing", "#passing_advanced");
+        tableID.put("2025_NFL_Advanced_Rushing", "#rushing_advanced");
+        tableID.put("2025_NFL_Advanced_Receiving", "#receiving_advanced");
+        tableID.put("2025_NFL_Advanced_Defense", "#defense_advanced");
+        tableID.put("2025_NFL_Fantasy_Rankings", "#fantasy");
+        tableID.put("2025_Red_Zone_Passing_Stats", "#redzone_passing");
+        tableID.put("2025_Red_Zone_Rushing_Stats", "#redzone_rushing");
+        tableID.put("2025_Red_Zone_Receiving_Stats", "#redzone_receiving");
     }
 
     public ArrayList<Object> getStatsById(int ID){
+
+        logger.info("Getting stats by ID {}", ID);
 
         ArrayList<Object> output = new ArrayList<Object>();
 
@@ -104,6 +122,8 @@ public class PlayerStatsService {
 
     public ArrayList<Object> getStatsByName(String name){
 
+        logger.info("Getting stats by name {}", name);
+
         ArrayList<Object> output = new ArrayList<>();
 
         int ID = playerDatabaseService.getPlayerIDs().get(name);
@@ -123,7 +143,7 @@ public class PlayerStatsService {
         return output;
     }
 
-    private void updatePlayerStats(){
+    protected void updatePlayerStats(){
         logger.info("Updating player stats");
 
         // set up rate limiter
@@ -138,7 +158,7 @@ public class PlayerStatsService {
 
                 Document doc = Jsoup.connect(url)
                         .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36")
-                        .timeout(1000)
+                        .timeout(10000)
                         .get();
 
                 // grab title
@@ -150,7 +170,7 @@ public class PlayerStatsService {
 
 
                 // load in table
-                Element table = doc.selectFirst("table");
+                Element table = doc.selectFirst(tableID.get(title));
                 if (table == null) {
                     logger.error("Table is null or empty");
                     throw new RuntimeException("Table not found URL: " + url);

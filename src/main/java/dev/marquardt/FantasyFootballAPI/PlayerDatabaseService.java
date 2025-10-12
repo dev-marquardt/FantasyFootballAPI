@@ -32,26 +32,34 @@ public class PlayerDatabaseService {
 
     public Optional<Player> getPlayerById(int ID){
 
+        logger.info("Getting player by ID {}", ID);
+
         return playerRepository.findById(ID);
     }
 
     public List<Player> getAllPlayers(){
+
+        logger.info("Getting all players");
 
         return playerRepository.findAll();
     }
 
     public List<Player> getPlayersByPosition(String position){
 
+        logger.info("Getting player by position {}", position);
+
         return playerRepository.findByPositionIgnoreCase(position);
     }
 
     public Optional<Player> getPlayerByName(String name){
 
+        logger.info("Getting player by name {}", name);
+
         return playerRepository.findById(playerIDs.get(name));
     }
 
 
-    public void updatePlayerDatabase(){
+    protected void updatePlayerDatabase(){
         logger.info("Started API Player Updating");
 
         try {
@@ -62,9 +70,10 @@ public class PlayerDatabaseService {
             int playerId = 0;
 
             for (String key : jsonObject.keySet()) {
-                if (key.matches("//d+")) {
+                if (key.matches("\\d+")) {
                     playerId++;
-                    JSONObject playerData = new JSONObject(key);
+
+                    JSONObject playerData = jsonObject.getJSONObject(key);
 
                     String searchFullName = playerData.optString("search_full_name", null);
                     if (searchFullName == null) {
